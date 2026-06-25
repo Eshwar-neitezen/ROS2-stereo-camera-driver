@@ -140,49 +140,6 @@ stereo_camera/
     └── test_pep257.py
 ```
 
----
-
-## Robotics Concepts and Design Principles
-
-### Perception Pipeline Fundamentals
-
-1. **Sensor Synchronization**
-   - Global shutter ensures no rolling-shutter artifacts
-   - Dual cameras capture at identical timestamps
-   - Critical for stereo correspondence
-
-2. **Image Transport & Message Passing**
-   - Standard ROS2 `sensor_msgs/Image` format
-   - cv_bridge for OpenCV ↔ ROS2 conversion
-   - Efficient topic-based distribution
-
-3. **Real-Time Constraints**
-   - Fixed-rate frame capture with ROS2 timers
-   - Predictable publishing latency
-   - Foundation for real-time perception systems
-
-### System Design Patterns
-
-- **Node Composition** — Single, self-contained node for modularity and reusability
-- **Topic-Based Communication** — Decoupled architecture allows multiple downstream subscribers
-- **Direct Hardware Interface** — OpenCV integration for USB device access
-- **Rosbag2 Integration** — Separation of data collection from offline processing
-
-### Programmer Ethics in Robotics
-
-Perception systems are foundational to autonomous behavior. This implementation adheres to:
-
-- **Data Integrity** — Synchronized stereo frames ensure accurate geometric relationships
-- **Transparency** — Published topics and message types follow standard ROS2 conventions
-- **Testing** — Package includes linting and code style verification (flake8, pep257)
-- **Reproducibility** — Rosbag2 recording enables dataset sharing and offline analysis
-- **Safety** — Frame capture rate and publication latency remain observable at runtime
-- **Extensibility** — Clean interface allows future integration of calibration and depth estimation
-
----
-
-## Stereo Vision Fundamentals
-
 ### Core Concepts
 
 **Epipolar Geometry**
@@ -272,35 +229,3 @@ This project demonstrates hands-on proficiency with:
 - [Image Transport](http://wiki.ros.org/image_transport)
 - [Rosbag2](https://index.ros.org/r/rosbag2/)
 
-**Stereo Vision & Calibration**
-- [Kalibr IMU and Camera Calibration](https://github.com/ethz-asl/kalibr)
-- [OpenCV Stereo Vision](https://docs.opencv.org/4.x/dd/d53/tutorial_py_depthmap.html)
-- [Multiple View Geometry in Computer Vision](https://www.robots.ox.ac.uk/~vgg/hzbook/)
-
-**Robotics & Perception**
-- [Probabilistic Robotics (Thrun, Burgard, Fox)](https://mitpress.mit.edu/9780262201629/probabilistic-robotics/)
-- [State Estimation for Robotics (Barfoot)](https://www.cambridge.org/core/books/state-estimation-for-robotics/E07C7A2B2D4F1F0F1F1F1F1F1F1F1F1F)
-
----
-
-## License
-
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
-
----
-
-## Contributing
-
-Contributions are welcome. Please ensure:
-- Code follows PEP 8 style guidelines
-- New features include tests
-- Documentation is updated
-- Commits are descriptive
-
-For bug reports or feature requests, open an issue on GitHub.
-
----
-
-## Acknowledgments
-
-Built as a foundation for stereo perception research and robot learning pipelines. Designed with extensibility in mind for future integration with calibration, rectification, depth estimation, and imitation learning frameworks.
