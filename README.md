@@ -6,12 +6,13 @@ A lightweight ROS2 Jazzy driver for USB global-shutter stereo cameras. Captures 
 
 ## Installation and Requirements
 
-### C++ / System Dependencies
+### System Dependencies
+
+Clone the repository into your ROS2 workspace:
 
 ```bash
-cd /home/$USER/workspace/
-git clone https://github.com/<your-username>/ros2_stereo_camera_driver.git
-cd ros2_stereo_camera_driver
+cd ~/ros2_ws/src
+git clone https://github.com/<your-username>/stereo_camera.git
 ```
 
 Install required system packages:
@@ -19,41 +20,19 @@ Install required system packages:
 ```bash
 sudo apt update
 sudo apt install -y \
-  build-essential \
-  cmake \
   python3-colcon-common-extensions \
   ros-jazzy-cv-bridge \
-  ros-jazzy-image-transport \
-  python3-opencv \
-  libopencv-dev
+  python3-opencv
 ```
 
 ### Build the ROS2 Package
 
-Assuming you have a ROS2 Jazzy workspace at `~/ros2_ws`:
+Build the stereo_camera package:
 
 ```bash
-cd ~/ros2_ws/src
-git clone https://github.com/<your-username>/ros2_stereo_camera_driver.git
 cd ~/ros2_ws
-colcon build --packages-select ros2_stereo_camera_driver
+colcon build --packages-select stereo_camera
 source install/setup.bash
-```
-
-### Python Dependencies
-
-Create a conda environment (optional but recommended):
-
-```bash
-conda create -n stereo_driver python=3.12 -y
-conda activate stereo_driver
-```
-
-Install Python packages:
-
-```bash
-pip install opencv-python
-pip install numpy
 ```
 
 ---
@@ -67,7 +46,6 @@ pip install numpy
 | Shutter Type | Global Shutter |
 | Sensor Configuration | Dual synchronized cameras |
 | Combined Output | 4000 × 1200 pixels (2 × 2000×1200 side-by-side) |
-| Frame Rate | Up to 60 FPS |
 | OS | Ubuntu 24.04 LTS |
 | Middleware | ROS2 Jazzy |
 
@@ -77,19 +55,18 @@ pip install numpy
 
 ### Perception Pipeline Design
 
-1. **Hardware Interface** — USB frame capture via OpenCV
-2. **Synchronization** — Global shutter ensures frame alignment
-3. **Frame Processing** — Split combined stereo image into independent channels
+1. **Hardware Interface** — USB stereo camera capture via OpenCV
+2. **Frame Acquisition** — Global shutter ensures synchronized dual-sensor capture
+3. **Frame Processing** — Split combined stereo image into independent left/right channels
 4. **ROS2 Publishing** — Distribute left/right streams as standard image topics
 5. **Visualization** — Real-time monitoring via Foxglove Studio
 6. **Recording** — Dataset capture with rosbag2 for offline analysis
 
 ### System Components
 
-- **stereo_camera_node.py** — Main capture and publisher node
-- **frame_splitter.py** — Image splitting and preprocessing logic
-- **camera_params.yaml** — Configuration and topic parameters
-- **stereo_camera.launch.py** — Launch file for integrated bring-up
+The stereo_camera package contains a single Python node that handles the entire pipeline:
+
+- **stereo_node.py** — Captures frames from USB camera, splits the combined stereo image, and publishes left/right streams as ROS2 Image messages.
 
 ---
 
@@ -104,21 +81,19 @@ pip install numpy
 
 ## Usage
 
-### Run the Driver Node
+### Run the Stereo Camera Node
+
+Launch the stereo camera node:
 
 ```bash
-ros2 run ros2_stereo_camera_driver stereo_camera_node
+ros2 run stereo_camera stereo_node
 ```
 
-Or use the launch file for integrated bring-up with Foxglove bridge:
-
-```bash
-ros2 launch ros2_stereo_camera_driver stereo_camera.launch.py
-```
+The node will begin capturing frames from the USB camera and publishing to `/left_camera/image_raw` and `/right_camera/image_raw`.
 
 ### Live Visualization with Foxglove
 
-Launch the Foxglove bridge:
+In a separate terminal, launch the Foxglove bridge:
 
 ```bash
 ros2 launch foxglove_bridge foxglove_bridge_launch.xml
@@ -149,25 +124,20 @@ ros2 bag play stereo_dataset
 ## Repository Structure
 
 ```
-ros2_stereo_camera_driver/
-├── stereo_camera_driver/
-│   ├── __init__.py
-│   ├── stereo_camera_node.py      # Main node
-│   └── frame_splitter.py          # Frame processing
-├── launch/
-│   └── stereo_camera.launch.py
-├── config/
-│   └── camera_params.yaml
-├── resource/
-│   └── ros2_stereo_camera_driver
-├── test/
-│   ├── test_flake8.py
-│   └── test_pep257.py
-├── package.xml
-├── setup.py
-├── setup.cfg
+stereo_camera/
 ├── LICENSE
-└── README.md
+├── package.xml
+├── resource/
+│   └── stereo_camera
+├── setup.cfg
+├── setup.py
+├── stereo_camera/
+│   ├── __init__.py
+│   └── stereo_node.py
+└── test/
+    ├── test_copyright.py
+    ├── test_flake8.py
+    └── test_pep257.py
 ```
 
 ---
@@ -193,21 +163,21 @@ ros2_stereo_camera_driver/
 
 ### System Design Patterns
 
-- **Node Composition** — Standalone node for modularity and reusability
-- **Topic-Based Communication** — Decoupled from downstream consumers
-- **Configuration via YAML** — Parameters for resolution, FPS, exposure
-- **Rosbag2 Integration** — Separation of collection and processing
+- **Node Composition** — Single, self-contained node for modularity and reusability
+- **Topic-Based Communication** — Decoupled architecture allows multiple downstream subscribers
+- **Direct Hardware Interface** — OpenCV integration for USB device access
+- **Rosbag2 Integration** — Separation of data collection from offline processing
 
 ### Programmer Ethics in Robotics
 
-Perception systems are foundational to autonomous behavior. Responsible development requires:
+Perception systems are foundational to autonomous behavior. This implementation adheres to:
 
-- **Data Integrity** — Ensure synchronized, calibrated sensor streams
-- **Transparency** — Document sensor limitations and failure modes
-- **Testing** — Validate in diverse lighting and environmental conditions
-- **Traceability** — Maintain recorded datasets for auditing and debugging
-- **Safety** — Monitor frame rates and latency; alert on degradation
-- **Privacy** — Handle visual data with appropriate access controls
+- **Data Integrity** — Synchronized stereo frames ensure accurate geometric relationships
+- **Transparency** — Published topics and message types follow standard ROS2 conventions
+- **Testing** — Package includes linting and code style verification (flake8, pep257)
+- **Reproducibility** — Rosbag2 recording enables dataset sharing and offline analysis
+- **Safety** — Frame capture rate and publication latency remain observable at runtime
+- **Extensibility** — Clean interface allows future integration of calibration and depth estimation
 
 ---
 
@@ -260,25 +230,23 @@ This project demonstrates hands-on proficiency with:
 - Node lifecycle and composition
 - Publisher/subscriber patterns
 - ROS2 timers and callbacks
-- Launch file configuration
+- Standard message types (sensor_msgs/Image)
 
 **Image Processing**
 - USB video capture with OpenCV
-- Frame splitting and preprocessing
+- Frame splitting and manipulation
 - Message-based image transport
-- cv_bridge integration
+- cv_bridge integration for Mat ↔ Image conversion
 
 **Perception Systems**
-- Synchronized multi-camera acquisition
-- Stereo vision fundamentals
-- Sensor fusion pipelines
-- Dataset recording for machine learning
+- Synchronized dual-camera acquisition
+- Stereo vision fundamentals (epipolar geometry, rectification concepts)
+- Dataset recording for offline analysis and machine learning
 
 **Software Engineering**
-- Clean module organization
-- Configuration management
-- Real-time system design
-- Testing and debugging
+- ROS2 Python package structure
+- Code style and quality testing (flake8, pep257)
+- Clean, modular node design
 
 ---
 
